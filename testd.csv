@@ -1,0 +1,32 @@
+Variable,Nombre completo de variable,Tipo de variable,Descripcion de variable
+LOC,Localidad,Categórica,Representa el nombre de la localidad donde reside el encuestado.
+CD_A,Ciudad autorrepresentada,Categórica,Indica la ciudad con la que el encuestado se identifica.
+ENT,Entidad,Categórica,Especifica el nombre del estado mexicano donde vive el encuestado.
+C_RES,Condición de residencia,Categórica,"Describe la situación de residencia del encuestado, como ""nacido en México"" o ""extranjero""."
+SEX,Sexo,Categórica,"Registra el sexo del encuestado, ya sea ""masculino"" o ""femenino""."
+CS_P12,¿Sabe leer y escribir un recado?,Categórica,"Representa la respuesta del encuestado a la pregunta ""¿Sabe leer y escribir un recado?"", siendo ""sí"" o ""no""."
+CS_P15,¿Qué estudios le pidieron a ... para ingresar a esta carrera?,Categórica,"Registra la respuesta del encuestado a la pregunta ""¿Qué estudios le pidieron para ingresar a esta carrera?"", como ""diploma de preparatoria"" o ""examen de admisión""."
+CS_P16,¿...Terminó los estudios o materias de esta carrera?,Categórica,"Representa la respuesta del encuestado a la pregunta ""¿Terminó los estudios o materias de esta carrera?"", siendo ""sí"" o ""no""."
+CS_P17,¿...Asiste actualmente a la escuela?,Categórica,"Registra la respuesta del encuestado a la pregunta ""¿Asiste actualmente a la escuela?"", siendo ""sí"" o ""no""."
+E_CON,Estado conyugal,Categórica,"Describe el estado civil del encuestado, como ""soltero"", ""casado"" o ""viudo""."
+CS_AD_DES,¿A qué estado de la república o país se fue ... ?,Categórica,Indica el estado o país al que se mudó el encuestado.
+CS_NR_MOT,¿Cuál es el motivo principal por el que llegó ...?,Categórica,Especifica la razón principal por la que el encuestado llegó al lugar de residencia.
+CS_NR_ORI,¿De qué estado de la República Mexicana o país vino ...?,Categórica,Indica el estado o país del que proviene el encuestado.
+ZONA,Zona salarial,Categórica,Representa la zona salarial donde trabaja el encuestado.
+TCCO,Clasificación de la población ocupada que trabajan menos de 35 horas más de 35 horas y de 48 horas,Categórica,"Clasifica la situación laboral del encuestado según el número de horas trabajadas por semana, como ""empleado menos de 35 horas""."
+MA48ME1SM,Población ocupada que trabaja más de 48 horas y gana menos un salario mínimo,Categórica,Indica la situación laboral del encuestado que trabaja más de 48 horas y gana menos del salario mínimo.
+SCIAN,Clasificación de actividades económicas con base al sistema de clasificación Industrial de América del Norte,Categórica,Representa el sector económico de empleo del encuestado según el Sistema de Clasificación Industrial de América del Norte (SCIAN).
+TRANS_PPAL,Trabajadores transfronterizos del trabajo principal,Categórica,Indica si el encuestado es un trabajador transfronterizo en su trabajo principal.
+CS_P14_C,Clave de la carrera,Categórica,Indica un código para la carrera o campo de estudio del encuestado.
+SALARIO,Salario mínimo mensual,Cuantitativa continua,Especifica el salario mínimo mensual del encuestado en pesos mexicanos.
+FAC,Ponderador,Cuantitativa continua,Representa un factor de ponderación utilizado para ajustar los datos por muestreo y no respuesta.
+INGOCUP,Ingreso mensual,Cuantitativa continua,Especifica el ingreso total mensual del encuestado proveniente de su trabajo principal en pesos mexicanos.
+ING_X_HRS,Promedio de ingreso por hora trabajada,Cuantitativa continua,"Representa el promedio de ingresos por hora trabajada del encuestado, calculado dividiendo el Ingreso mensual por las Horas trabajadas en la semana."
+EDA,Edad,Cuantitativa discreta,Registra la edad del encuestado en años.
+NAC_ANIO,Año de nacimiento,Cuantitativa discreta,Especifica el año en que nació el encuestado.
+CS_P13_2,¿Hasta qué año aprobó ... en la escuela?,Cuantitativa discreta,Representa el año en que el encuestado completó el nivel educativo más alto reportado en CS_P13_1.
+N_HIJ,En total cuántas hijas e hijos que nacieron vivos ha tenido,Cuantitativa discreta,Registra el número total de hijos nacidos vivos que ha tenido el encuestado.
+ANIOS_ESC,Años de escolaridad,Cuantitativa discreta,Registra el número total de años de escolaridad que ha completado el encuestado.
+HRSOCUP,Horas trabajadas en la semana,Cuantitativa discreta,Indica el número total de horas que el encuestado trabajó durante la semana de referencia.
+T_TRA,Total de trabajos,Cuantitativa discreta,Registra el número total de trabajos que tiene el encuestado.
+CS_P13_1,¿Hasta qué grado aprobó... en la escuela (nivel escolar)?,Mixta,"Esta variable combina elementos cualitativos y cuantitativos. La respuesta cualitativa (""¿Hasta qué grado aprobó... en la escuela?"") permite al encuestado expresar de forma libre el nivel educativo más alto que ha alcanzado, mientras que la respuesta categórica (""nivel escolar"") se utiliza para codificar este nivel en una escala predefinida, facilitando el análisis estadístico."

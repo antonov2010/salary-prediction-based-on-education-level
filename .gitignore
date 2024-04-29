@@ -49,5 +49,7 @@ po/*~
 rsconnect/
 
 # csv files
-*.csv
 *.zip
+enoe_n_2022_trim4_csv (2)/
+*.xlsx
+*.txt

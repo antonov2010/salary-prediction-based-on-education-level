@@ -1,0 +1,34 @@
+Variable,Descripción,Tipo de variable
+LOC,Localidad,Cualitativa
+CD_A,Ciudad autorrepresentada,Cualitativa
+ENT,Entidad,Cualitativa
+C_RES,Condición de residencia,Cualitativa
+SEX,Sexo,Cualitativa
+EDA,Edad,Cuantitativa
+NAC_ANIO,Año de nacimiento,Cuantitativa
+CS_P12,¿Sabe leer y escribir un recado?,Cualitativa
+CS_P13_1,¿Hasta qué grado aprobó... en la escuela (nivel escolar)?,Mixta
+CS_P13_2,¿Hasta qué año aprobó ... en la escuela?,Cuantitativa
+CS_P14_C,Clave de la carrera,Cuantitativa
+CS_P15,¿Qué estudios le pidieron a ... para ingresar a esta carrera?,Cualitativa
+CS_P16,¿...Terminó los estudios o materias de esta carrera?,Cualitativa
+CS_P17,¿...Asiste actualmente a la escuela?,Cualitativa
+N_HIJ,En total cuántas hijas e hijos que nacieron vivos ha tenido,Cuantitativa
+E_CON,Estado conyugal,Cualitativa
+CS_AD_DES,¿A qué estado de la república o país se fue ... ?,Cualitativa
+CS_NR_MOT,¿Cuál es el motivo principal por el que llegó ...?,Cualitativa
+CS_NR_ORI,¿De qué estado de la República Mexicana o país vino ...?,Cualitativa
+ZONA,Zona salarial,Cualitativa
+SALARIO,Salario mínimo mensual,Cuantitativa
+FAC,Ponderador,Cuantitativa
+ANIOS_ESC,Años de escolaridad,Cuantitativa
+HRSOCUP,Horas trabajadas en la semana,Cuantitativa
+INGOCUP,Ingreso mensual,Cuantitativa
+ING_X_HRS,Promedio de ingreso por hora trabajada,Cuantitativa
+T_TRA,Total de trabajos,Cuantitativa
+HRS_TRAB_PPAL,Horas trabajadas en el trabajo principal,Cuantitativa
+ING_TRAB_PPAL,Ingreso del trabajo principal,Cuantitativa
+TCCO,Clasificación de la población ocupada que trabajan menos de 35 horas más de 35 horas y de 48 horas,Cualitativa
+MA48ME1SM,Población ocupada que trabaja más de 48 horas y gana menos un salario mínimo,Cualitativa
+SCIAN,Clasificación de actividades económicas con base al sistema de clasificación Industrial de América del Norte,Cualitativa
+TRANS_PPAL,Trabajadores transfronterizos del trabajo principal,Cualitativa
