@@ -1,19 +1,28 @@
+#required to read csv files
 library(data.table)
+#required to plot graphs
+library(ggplot2)
+#required to manipulate dataframes
+library(dplyr)
 
-# Especifica la ruta completa al archivo CSV
-ruta_archivo <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"  # Reemplaza "archivo.csv" con el nombre real del archivo
-
-# Lee el archivo CSV en una tabla de datos
-datos <- fread(ruta_archivo)
+# read csv file and load to a table data
+file_path <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"
+data <- fread(file_path)
 
 
-# Imprimir el tipo de dato usando typeof()
-print(typeof(datos))
+# print data type of data var
+print(typeof(data))
 
-# Imprimir los primeros 25 registros de "variable1" usando head()
+# Get records quantity
+total_records <- nrow(data)
 
-# Obtener el número de registros usando nrow()
-numero_registros_nrow <- nrow(datos)
+# Identify columns with at least one NA value
+columns_with_na <- colnames(data)[ apply(data, 2, anyNA) ]
+
+# Print the column names
+print(columns_with_na)
+
+
 
 # Contar el número de registros con cero usando sum() e ifelse()
 numero_registros_cero_sum <- sum(ifelse(datos$cs_p12 == 0, 1, 0))
@@ -64,18 +73,12 @@ abline(v = moda_valor, col = "red", linetype = "dashed",
        label = paste0("Moda:", moda_valor))
 
 
-# Obtener la distribución de frecuencia de "variable1" usando ggplot2
-library(ggplot2)
-
 ggplot(data_filtered, aes(x = cs_p12)) + 
   geom_freqpoly() + 
   labs(title = "Distribución de frecuencia de variable1")
 
 # Calcular la suma de cada fila
 suma_filas <- rowSums(datos)
-
-if (!require("dplyr")) install.packages("dplyr")
-library(dplyr)
 
 # Eliminar la columna
 datos <- select(datos, -t_loc_men)
