@@ -4,6 +4,8 @@ library(data.table)
 library(ggplot2)
 #required to manipulate dataframes
 library(dplyr)
+#for data manipulation
+library(tidyr)
 
 # read csv file and load to a table data
 file_path <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"
@@ -26,46 +28,29 @@ print(typeof(columns_with_na))
 
 print(sorted_na_columns)
 
-# Write the variable to the CSV file
+# Write the variable with columns with at least one missing value to a CSV file
 write.csv(sorted_na_columns, "columns_with_missing_values.csv", row.names = FALSE)
 
-# Exclude rows with missing values (NA)
-filtered_data <- na.omit(data)
-
-# Exclude rows with missing values (NA)
-filtered_data <- na.omit(data)
-
-# Calculate mode (categorical data)
-if (is.factor(filtered_data$cs_ad_des)) {
-  mode_value <- stats::mode(filtered_data$cs_ad_des)[1]
-} else {
-  mode_value <- NA  # Mode not applicable for continuous data (consider using median)
-}
-
-# Calculate median (both continuous and categorical data)
-median_value <- median(filtered_data$cs_ad_des, na.rm = TRUE)
-
-# Print the results
-cat("Mode (if applicable):", mode_value, "\n")
-cat("Median:", median_value)
-
+# Calculate mode for categorical data
 Mode <- function(x) {
   ux <- na.omit(unique(x) )
   tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
 }
 
-column_mode = Mode(data$cs_ad_des)
+# Calculate median (both continuous and categorical data)
+median_value <- median(data$cs_ad_des, na.rm = TRUE)
+mode_value = Mode(data$cs_ad_des)
 
-print(column_mode)
+# Print the results
+cat("Median:", median_value)
+print(mode_value)
 
-#count by value
+#count by a given value
 column_value <- sum(data$cs_ad_des == 9, na.rm = TRUE)
 
 print(column_value)
 
-print(typeof(data$cs_ad_des))
-
-# dplyr: Group by values in 'my_column' excluding NA, and count occurrences
+# dplyr: Group by values in 'my_column', and count occurrences
 grouped_counts <- data %>%
   group_by(cs_ad_des) %>%  # Group by values in 'my_column'
   count()  # Count occurrences of each group
