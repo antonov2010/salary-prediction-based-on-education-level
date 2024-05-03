@@ -77,8 +77,8 @@ grouped_counts <- data %>%
 # Print the results
 print(grouped_counts)
 
-# Function to group data by column values and count occurrences, excluding NA
-group_and_count_na_rm <- function(df, column_name) {
+# Function to group data by column values and count occurrences, including NA
+group_and_count_na <- function(df, column_name) {
   df %>%
     #filter(!is.na(!!column_name)) %>%  # Filter out rows with NA using !! for non-standard evaluation
     #group_by(!!column_name) %>%  # Group by values in 'column_name' using !! for non-standard evaluation
@@ -87,13 +87,32 @@ group_and_count_na_rm <- function(df, column_name) {
     count()
 }
 
-# Example usage
-grouped_counts <- group_and_count_na_rm(data, "cs_ad_des")
+grouped_counts <- group_and_count_na(data, "cs_ad_des")
 print(grouped_counts)
 
 for (col in sorted_na_columns) {
   cat("Column:", col, "\n")
-  print(group_and_count_na_rm(data, col))
+  print(group_and_count_na(data, col))
+  cat("\n")
+}
+
+#Calculate percentages for grouped data
+percent_by_group <- function(df, col, total_count = nrow(df)) {
+  df %>%
+    group_by(df[,..col]) %>%  # Group by values in 'col' (# Using column selection)
+    summarise(
+      n = n(),  # Count observations (including missing values)
+      pct = n / total_count * 100  # Calculate percentage relative to total count
+    )
+}
+
+grouped_counts_percentage <- percent_by_group(data, col="cs_ad_des")
+
+print(grouped_counts_percentage)
+
+for (col in sorted_na_columns) {
+  cat("Column:", col, "\n")
+  print(percent_by_group(data, col))
   cat("\n")
 }
 
