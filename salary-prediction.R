@@ -17,12 +17,75 @@ print(typeof(data))
 total_records <- nrow(data)
 
 # Identify columns with at least one NA value
-columns_with_na <- colnames(data)[ apply(data, 2, anyNA) ]
+columns_with_na <- colnames(data)[ apply(data, 2, anyNA)]
 
-# Print the column names
-print(columns_with_na)
+# Sort and print column names with na values
+sorted_na_columns <- sort(columns_with_na)
 
+print(typeof(columns_with_na))
 
+print(sorted_na_columns)
+
+# Write the variable to the CSV file
+write.csv(sorted_na_columns, "columns_with_missing_values.csv", row.names = FALSE)
+
+# Exclude rows with missing values (NA)
+filtered_data <- na.omit(data)
+
+# Exclude rows with missing values (NA)
+filtered_data <- na.omit(data)
+
+# Calculate mode (categorical data)
+if (is.factor(filtered_data$cs_ad_des)) {
+  mode_value <- stats::mode(filtered_data$cs_ad_des)[1]
+} else {
+  mode_value <- NA  # Mode not applicable for continuous data (consider using median)
+}
+
+# Calculate median (both continuous and categorical data)
+median_value <- median(filtered_data$cs_ad_des, na.rm = TRUE)
+
+# Print the results
+cat("Mode (if applicable):", mode_value, "\n")
+cat("Median:", median_value)
+
+Mode <- function(x) {
+  ux <- na.omit(unique(x) )
+  tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
+}
+
+column_mode = Mode(data$cs_ad_des)
+
+print(column_mode)
+
+#count by value
+column_value <- sum(data$cs_ad_des == 9, na.rm = TRUE)
+
+print(column_value)
+
+print(typeof(data$cs_ad_des))
+
+# dplyr: Group by values in 'my_column' excluding NA, and count occurrences
+grouped_counts <- data %>%
+  group_by(cs_ad_des) %>%  # Group by values in 'my_column'
+  count()  # Count occurrences of each group
+
+# Print the results
+print(grouped_counts)
+
+# Function to group data by column values and count occurrences, excluding NA
+group_and_count_na_rm <- function(df, column_name) {
+  df %>%
+    #filter(!is.na(!!column_name)) %>%  # Filter out rows with NA using !! for non-standard evaluation
+    #group_by(!!column_name) %>%  # Group by values in 'column_name' using !! for non-standard evaluation
+    #filter(!is.na({{column_name}})) %>%
+    group_by(df[[column_name]]) %>%
+    count()
+}
+
+# Example usage
+grouped_counts <- group_and_count_na_rm(data, "cs_ad_des")
+print(grouped_counts)
 
 # Contar el número de registros con cero usando sum() e ifelse()
 numero_registros_cero_sum <- sum(ifelse(datos$cs_p12 == 0, 1, 0))
