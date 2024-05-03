@@ -21,10 +21,16 @@ total_records <- nrow(data)
 # Identify columns with at least one NA value
 columns_with_na <- colnames(data)[ apply(data, 2, anyNA)]
 
+print(columns_with_na[2])
 # Sort and print column names with na values
 sorted_na_columns <- sort(columns_with_na)
 
 print(typeof(columns_with_na))
+
+# Loop through unique values in the grouping column
+for (col in sorted_na_columns) {
+  cat("Column:", col, "\n")
+}
 
 print(sorted_na_columns)
 
@@ -32,14 +38,27 @@ print(sorted_na_columns)
 write.csv(sorted_na_columns, "columns_with_missing_values.csv", row.names = FALSE)
 
 # Calculate mode for categorical data
-Mode <- function(x) {
+c_Mode <- function(x) {
   ux <- na.omit(unique(x) )
   tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
 }
 
+c_Median <- function(x) {
+  median(x, na.rm = TRUE)
+}
+
 # Calculate median (both continuous and categorical data)
-median_value <- median(data$cs_ad_des, na.rm = TRUE)
-mode_value = Mode(data$cs_ad_des)
+median_value <- c_Median(data$cs_ad_des, na.rm = TRUE)
+mode_value = c_Mode(data$cs_ad_des)
+
+for (col in sorted_na_columns) {
+  cat("Column:", col, "\n")
+  cat("Median: ", c_Median(data[[col]]), "\n")
+  cat("Mode: ", c_Mode(data[[col]]), "\n")
+  cat("\n")
+}
+
+?median
 
 # Print the results
 cat("Median:", median_value)
@@ -71,6 +90,15 @@ group_and_count_na_rm <- function(df, column_name) {
 # Example usage
 grouped_counts <- group_and_count_na_rm(data, "cs_ad_des")
 print(grouped_counts)
+
+for (col in sorted_na_columns) {
+  cat("Column:", col, "\n")
+  print(group_and_count_na_rm(data, col))
+  cat("\n")
+}
+
+#next step get the percentage of missing values for sorted_na_columns
+
 
 # Contar el número de registros con cero usando sum() e ifelse()
 numero_registros_cero_sum <- sum(ifelse(datos$cs_p12 == 0, 1, 0))
