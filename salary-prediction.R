@@ -106,78 +106,64 @@ percent_by_group <- function(df, col, total_count = nrow(df)) {
     )
 }
 
-grouped_counts_percentage <- percent_by_group(data, col="cs_ad_des")
-
-print(grouped_counts_percentage)
-
-for (col in sorted_na_columns) {
-  cat("Column:", col, "\n")
-  print(percent_by_group(data, col))
-  cat("\n")
+#function to print groups percentages based on a condition filter, to identify missing data rates
+print_grouped_percentages_for_columnas_with_na <- function(acceptable_percentage, comparison_operator = 'gt'){
+  for (col in sorted_na_columns) {
+    grouped_counts_percentage = percent_by_group(data, col)
+    if(comparison_operator == 'gt'){
+      na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] & grouped_counts_percentage[['pct']] > acceptable_percentage), 'pct']
+    }
+    else{
+      na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] & grouped_counts_percentage[['pct']] < acceptable_percentage), 'pct']
+    }
+    if (nrow(na_data) > 0) {
+      cat(col, ": ", na_data[['pct']],"\n")
+    }
+  }
 }
 
-#next step get the percentage of missing values for sorted_na_columns
+print_grouped_missing_percentages <- 
+  function(df, sorted_na_columns, acceptable_percentage, comparison_operator = 'gt') {
+    # Error handling for missing arguments
+    if (missing(df) | missing(sorted_na_columns) | missing(acceptable_percentage)) {
+      stop("Missing required arguments: df, sorted_na_columns, and acceptable_percentage.")
+    }
+    
+    if(comparison_operator == 'gt'){
+      cat('High NA Values: Printing columns with NA value rates exceeding', acceptable_percentage, "%\n")
+    }
+    else{
+      cat('Acceptable NA Levels: Printing columns with NA value rates at most', acceptable_percentage, "%\n")
+    }
+    
+    # Validate comparison operator
+    valid_operators <- c("gt", "lte")
+    if (!comparison_operator %in% valid_operators) {
+      stop("Invalid comparison_operator. Use 'gt' for greater than or 'lte' for less than.")
+    }
+    line_number <- 1
+    for (col in sorted_na_columns) {
+      # Calculate percentage by group
+      grouped_counts_percentage <- percent_by_group(df, col)
+      
+      # Filter based on comparison operator
+      if(comparison_operator == 'gt'){
+        na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] 
+                                                   & grouped_counts_percentage[['pct']] > acceptable_percentage), 'pct']
+      }
+      else{
+        na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] 
+                                                   & grouped_counts_percentage[['pct']] <= acceptable_percentage), 'pct']
+      }
+      
+      if (nrow(na_data) > 0) {
+        # Print results for problematic groups
+        cat( line_number, "-", col, ": ", na_data[['pct']],"\n")
+        line_number <- line_number + 1
+      }
+    }
+  }
 
+print_grouped_percentages_for_columnas_with_na(50, 'lt')
 
-# Contar el número de registros con cero usando sum() e ifelse()
-numero_registros_cero_sum <- sum(ifelse(datos$cs_p12 == 0, 1, 0))
-
-# Contar valores NA
-cantidad_NA <- sum(is.na(datos$cs_p12))
-
-# Obtener la moda de "variable1" usando table()
-moda_tabla <- table(datos$cs_p12)
-
-# Identificar el valor (o valores) con mayor frecuencia
-moda_valor <- names(which.max(moda_tabla))
-
-moda_frecuencia <- max(moda_tabla)
-
-print(moda_valor)
-
-print(moda_frecuencia)
-
-# Obtener la moda, como este campo tiene na, el resultado lo genera como texto
-datos$cs_p12 <- as.integer(datos$cs_p12)
-
-moda_valores <- mode(datos$cs_p12)
-
-print(moda_valores)
-
-print(typeof(datos$cs_p12))
-
-# Obtener la moda de "mi_variable" excluyendo NA
-moda_valores <- mode(datos$cs_p12, na.rm = TRUE)
-
-?mode
-
-print(moda_valores)
-
-# Filter data excluding NA
-data_filtered <- datos %>% filter(!is.na(cs_p12))
-
-moda_valores <- mode(data_filtered$cs_p12)
-
-print(moda_valores)
-
-# Crear un histograma de "variable1"
-hist(datos$cs_p12, main = "Histograma de variable1")
-
-# Agregar anotación para indicar la moda
-abline(v = moda_valor, col = "red", linetype = "dashed", 
-       label = paste0("Moda:", moda_valor))
-
-
-ggplot(data_filtered, aes(x = cs_p12)) + 
-  geom_freqpoly() + 
-  labs(title = "Distribución de frecuencia de variable1")
-
-# Calcular la suma de cada fila
-suma_filas <- rowSums(datos)
-
-# Eliminar la columna
-datos <- select(datos, -t_loc_men)
-
-distribucion_frecuencias <- table(datos$est_d_men)
-print(distribucion_frecuencias)
-
+print_grouped_missing_percentages(data, sorted_na_columns, 50, 'gt')
