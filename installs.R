@@ -8,6 +8,6 @@ install_and_load <- function(package_to_install) {
 }
 
 install_and_load("data.table")
-install.packages("ggplot2")
+install_and_load("ggplot2")
 install_and_load("dplyr")
 install_and_load("tidyr")
