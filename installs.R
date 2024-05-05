@@ -1,4 +1,13 @@
-install.packages("data.table")
+# Function to install and load a package if not already available
+install_and_load <- function(package_to_install) {
+  # Check if package is already loaded
+  packageName <- paste(package_to_install, sep = "")
+  if (!is.loaded(package_to_install)) {
+    if (!require(packageName, character.only = TRUE)) install.packages(packageName, dependencies = TRUE)
+  }
+}
+
+install_and_load("data.table")
 install.packages("ggplot2")
-if (!require("dplyr")) install.packages("dplyr")
-if(!require("tidyr")) install.packages("tidyr")
+install_and_load("dplyr")
+install_and_load("tidyr")

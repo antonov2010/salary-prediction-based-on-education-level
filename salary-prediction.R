@@ -47,15 +47,16 @@ c_Median <- function(x) {
   median(x, na.rm = TRUE)
 }
 
+c_Mean <- function(x) {
+  mean(x, na.rm = TRUE)
+}
+
 # Calculate median (both continuous and categorical data)
 median_value <- c_Median(data$cs_ad_des, na.rm = TRUE)
 mode_value = c_Mode(data$cs_ad_des)
 
 for (col in sorted_na_columns) {
-  cat("Column:", col, "\n")
-  cat("Median: ", c_Median(data[[col]]), "\n")
-  cat("Mode: ", c_Mode(data[[col]]), "\n")
-  cat("\n")
+  cat(col, "->","Median:", c_Median(data[[col]]),"Mode:", c_Mode(data[[col]]),"Mean:", c_Mean(data[[col]]), "\n")
 }
 
 ?median
@@ -157,13 +158,23 @@ print_grouped_missing_percentages <-
       }
       
       if (nrow(na_data) > 0) {
+        cs_ad_mot <- na_data[['pct']]
+        
+        # Round to one decimal place
+        rounded_value <- round(cs_ad_mot, 1)
+        
+        # Format as a string with percentage sign using paste
+        formatted_value <- paste(rounded_value, "%", sep = "")
+        
         # Print results for problematic groups
-        cat( line_number, "-", col, ": ", na_data[['pct']],"\n")
+        cat( line_number, "-", col, ":", formatted_value,"\n")
+        cat("Mode:", c_Mode(data[[col]]), "Median:", c_Median(data[[col]]), "Mean:", c_Mean(data[[col]]), "\n")
         line_number <- line_number + 1
       }
     }
   }
 
-print_grouped_percentages_for_columnas_with_na(50, 'lt')
+#print_grouped_percentages_for_columnas_with_na(50, 'lt')
 
-print_grouped_missing_percentages(data, sorted_na_columns, 50, 'gt')
+print_grouped_missing_percentages(data, sorted_na_columns, 50, 'lte')
+
