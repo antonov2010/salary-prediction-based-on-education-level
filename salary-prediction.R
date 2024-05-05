@@ -168,7 +168,7 @@ print_grouped_missing_percentages <-
         
         # Print results for problematic groups
         cat( line_number, "-", col, ":", formatted_value,"\n")
-        cat("Mode:", c_Mode(data[[col]]), "Median:", c_Median(data[[col]]), "Mean:", c_Mean(data[[col]]), "\n")
+        cat("Mode:", c_Mode(data[[col]]), "Median:", c_Median(data[[col]]), "Mean:", round(c_Mean(data[[col]]),1), "\n")
         line_number <- line_number + 1
       }
     }
@@ -176,5 +176,5 @@ print_grouped_missing_percentages <-
 
 #print_grouped_percentages_for_columnas_with_na(50, 'lt')
 
-print_grouped_missing_percentages(data, sorted_na_columns, 50, 'lte')
+print_grouped_missing_percentages(data, sorted_na_columns, 50, 'gt')
 
