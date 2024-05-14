@@ -245,26 +245,14 @@ sm <- summary(results_node)
 
 min_index <- which.min(sm$statistics$MAE[,'Min.'])  # Replace "column_name" with your actual column
 selected_row <- sm$statistics$MAE[min_index, ]
-print(min_index)
-print(selected_row)
-print(sm$statistics$MAE[,'Min.'])
+cat(names(min_index), round(selected_row[1],7))
 
-mae_values <- sm$statistics$MAE
+best_max_nodes <- as.integer(names(min_index))
 
-print(mae_values)
-
-metric_names <- names(mae_values)
-
-sorted_min_values <- sort(sm$statistics$MAE)
-
-print(sorted_min_values)
-
-min_mae <- summary(results_mtry)$rsd[1]
-
-print(results_mtry$values['MAE'])
 
 store_maxtrees <- list()
 for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
+  print(paste("Current ntree:", ntree))
   set.seed(5678)
   rf_maxtrees <- train(ingocup~.,
                        data = training_data,
@@ -274,7 +262,7 @@ for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
                        trControl = trControl,
                        importance = TRUE,
                        nodesize = 14,
-                       maxnodes = 47,
+                       maxnodes = best_max_nodes,
                        ntree = ntree)
   key <- toString(ntree)
   store_maxtrees[[key]] <- rf_maxtrees
