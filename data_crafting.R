@@ -218,17 +218,31 @@ print_correlation_matrix <- function(df) {
 print_correlation_matrix(data)
 
 
-summary_and_plot(data$cs_p12, 'Can read and write count', 'Can read and write', c(0,1,2,8,9))
+summary_and_plot(data_clean$cs_p12, 'Can read and write count', 'Can read and write', c(0,1,2,8,9))
 
-summary(data$sex)
+summary(data_clean$cs_p13_1)
 
-ms_count <- table(data$sex)
+ms_count <- table(data_clean$cs_p13_1)
 
 barplot(ms_count, main = 'Bar plot: Ing Count', xlab = 'Ing', ylab = 'Freq')
 
-hist(data$sex, main = 'Ing histogram', xlab = 'Ing', breaks = c(0, 1, 3))
+hist(data_clean$cs_p13_1, main = 'Ing histogram', xlab = 'Ing', breaks = c(
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10, 99,100
+))
 
-summary(data$n_hij)
+boxplot(data_clean, main = "Distribution of Data", ylab = "Value")
+
+# Loop through columns and create box plots
+for (col in names(data_clean)) {
+  # Check if the column is numeric (suitable for boxplots)
+  if (is.numeric(data_clean[[col]])) {
+    boxplot(data_clean[[col]], main = paste("Boxplot of", col), ylab = "Value")
+  } else {
+    # Print message for non-numeric columns
+    print(paste("Skipping boxplot for non-numeric column:", col))
+  }
+}
+summary(data_clean$ingocup)
 
 children_count <- table(data$n_hij)
 
@@ -245,7 +259,21 @@ barplot(got_a_certificate_count, main = "Got certificate", xlab = "Certificate",
 hist(data$cs_p16, main = "Histogram of received certificates", xlab = "Received certificate", 
      breaks = c(0,1,2,8,9,10), freq = FALSE)
 # Add labels for the education levels on the x-axis (optional)
-axis(1, at = c(1, 2, 9), labels = c("Yes", "No", "IDK"))
+axis(1, at = c(
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 99
+), labels = c(
+  'Ninguno',
+  'Preescolar',
+  'Primaria',
+  'Secundaria',
+  'Preparatoria o bachillerato',
+  'Normal',
+  'Carrera técnica',
+  'Profesional',
+  'Maestría',
+  'Doctorado',
+  'No sabe nivel'
+))
 mtext(c("Yes", "No", "IDK"), 
       at = c(1, 2, 9), xpd = TRUE, adj = 2.3 , font = 2)
 

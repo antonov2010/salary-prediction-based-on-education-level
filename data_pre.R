@@ -148,14 +148,137 @@ col_list <- c(
 # Subset data frame with dplyr
 data <- select(data, col_list)
 
-comparison_op <- 'lte'
+comparison_op <- 'gt'
 treshold <- 10
-
-print_grouped_missing_percentages(data, treshold, comparison_op, FALSE)
 
 high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
 
 for(item in high_missing_data){
   data <- drop_column_from_dataset(df = data, item)
+} 
+
+print_grouped_missing_percentages(data, treshold, comparison_op, FALSE)
+
+comparison_op <- 'lte'
+high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
+for(item in high_missing_data){
+  cat(item,':', n_miss(data[[item]]),'\n') # number of missing value for a given variable
 }
+
+# Select rows with complete data (no missing values) in all columns
+complete_rows <- complete.cases(data)  # Check for complete cases in all columns
+data_clean <- data[complete_rows, ]  # Select rows based on logical vector
+
+# subset_ingocup <- filter(data_clean, ingocup > 2000 & ingocup <= 14000)
+subset_ingocup <- filter(data_clean, ingocup > 16000)
+
+# Delete missing column
+subset_ingocup$ma48me1sm <- NULL
+
+scaled_data <- scale(subset_ingocup)
+
+# Manual model
+training_prop <- 0.7  # Proportion for training data
+training_indices <- sample(1:nrow(scaled_data), size = nrow(scaled_data) * training_prop)
+training_data <- scaled_data[training_indices, ]
+testing_data <- scaled_data[-training_indices, ]
+
+model <- randomForest(formula = ingocup ~ ., data = training_data, ntree = 3, importance = TRUE, do.trace = TRUE)
+
+print(model)
+
+# Grid search
+set.seed(1234)
+# Run the model
+trControl <- trainControl(method = "cv",
+                          number = 10,
+                          search = "grid",
+                          verboseIter = TRUE)
+# data_clean$ingocup = factor(data_clean$ingocup)
+rf_default <- train(ingocup~.,
+                    data = training_data,
+                    method = "rf",
+                    metric = "RMSE",
+                    trControl = trControl)
+# Print the results
+print(rf_default)
+
+tuneGrid <- expand.grid(.mtry = c(1: 10))
+
+rf_mtry <- train(ingocup~.,
+                 data = training_data,
+                 method = "rf",
+                 metric = "RMSE",
+                 tuneGrid = tuneGrid,
+                 trControl = trControl,
+                 importance = TRUE,
+                 nodesize = 14,
+                 ntree = 300)
+print(rf_mtry)
+
+print(rf_mtry$bestTune$mtry)
+
+best_mtry <- rf_mtry$bestTune$mtry 
+
+store_maxnode <- list()
+tuneGrid <- expand.grid(.mtry = best_mtry)
+
+for (maxnodes in c(25: 50)) {
+  print(paste("Current max node:", maxnodes))
+  set.seed(1234)
+  rf_maxnode <- train(ingocup~.,
+                      data = training_data,
+                      method = "rf",
+                      metric = "RMSE",
+                      tuneGrid = tuneGrid,
+                      trControl = trControl,
+                      importance = TRUE,
+                      nodesize = 14,
+                      maxnodes = maxnodes,
+                      ntree = 300)
+  current_iteration <- toString(maxnodes)
+  store_maxnode[[current_iteration]] <- rf_maxnode
+}
+
+results_node <- resamples(store_maxnode)
+sm <- summary(results_node)
+
+min_index <- which.min(sm$statistics$MAE[,'Min.'])  # Replace "column_name" with your actual column
+selected_row <- sm$statistics$MAE[min_index, ]
+print(min_index)
+print(selected_row)
+print(sm$statistics$MAE[,'Min.'])
+
+mae_values <- sm$statistics$MAE
+
+print(mae_values)
+
+metric_names <- names(mae_values)
+
+sorted_min_values <- sort(sm$statistics$MAE)
+
+print(sorted_min_values)
+
+min_mae <- summary(results_mtry)$rsd[1]
+
+print(results_mtry$values['MAE'])
+
+store_maxtrees <- list()
+for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
+  set.seed(5678)
+  rf_maxtrees <- train(ingocup~.,
+                       data = training_data,
+                       method = "rf",
+                       metric = "RMSE",
+                       tuneGrid = tuneGrid,
+                       trControl = trControl,
+                       importance = TRUE,
+                       nodesize = 14,
+                       maxnodes = 47,
+                       ntree = ntree)
+  key <- toString(ntree)
+  store_maxtrees[[key]] <- rf_maxtrees
+}
+results_tree <- resamples(store_maxtrees)
+summary(results_tree)
 
