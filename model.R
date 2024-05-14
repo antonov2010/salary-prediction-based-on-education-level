@@ -9,7 +9,7 @@ library(corrplot)
 library(randomForest)
 library(caret)  # Load caret package after installation
 library(e1071)
-
+library(MASS)  # Load MASS package for MedAE function
 
 # read csv file and load to a table data
 file_path <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"
@@ -17,8 +17,9 @@ data <- fread(file_path)
 
 # Statistical functions
 c_Mode <- function(x) {
-  ux <- na.omit(unique(x) )
-  tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
+  ux <- na.omit(unique(x))
+  tab <- tabulate(match(x, ux))
+  ux[tab == max(tab)]
 }
 
 c_Median <- function(x) {
@@ -32,30 +33,42 @@ c_Mean <- function(x) {
 #Calculate percentages for grouped data
 percent_by_group <- function(df, col, total_count = nrow(df)) {
   df %>%
-    group_by(df[,..col]) %>%  # Group by values in 'col' (# Using column selection)
-    summarise(
-      n = n(),  # Count observations (including missing values)
-      pct = n / total_count * 100  # Calculate percentage relative to total count
-    )
+    group_by(df[, ..col]) %>%  # Group by values in 'col' (# Using column selection)
+    summarise(n = n(), # Count observations (including missing values)
+              pct = n / total_count * 100  # Calculate percentage relative to total count
+              )
 }
 
 
-print_grouped_missing_percentages <- 
-  function(df, acceptable_percentage, comparison_operator = 'gt', return_list=FALSE) {
+print_grouped_missing_percentages <-
+  function(df,
+           acceptable_percentage,
+           comparison_operator = 'gt',
+           return_list = FALSE) {
     # Identify columns with at least one NA value
-    columns_with_na <- colnames(df)[ apply(df, 2, anyNA)]
+    columns_with_na <- colnames(df)[apply(df, 2, anyNA)]
     # Sort and print column names with na values
     sorted_na_columns <- sort(columns_with_na)
     # Error handling for missing arguments
-    if (missing(df) | missing(sorted_na_columns) | missing(acceptable_percentage)) {
+    if (missing(df) |
+        missing(sorted_na_columns) |
+        missing(acceptable_percentage)) {
       stop("Missing required arguments: df, sorted_na_columns, and acceptable_percentage.")
     }
     
-    if(comparison_operator == 'gt'){
-      cat('High NA Values: Printing columns with NA value rates exceeding', acceptable_percentage, "%\n")
+    if (comparison_operator == 'gt') {
+      cat(
+        'High NA Values: Printing columns with NA value rates exceeding',
+        acceptable_percentage,
+        "%\n"
+      )
     }
     else{
-      cat('Acceptable NA Levels: Printing columns with NA value rates at most', acceptable_percentage, "%\n")
+      cat(
+        'Acceptable NA Levels: Printing columns with NA value rates at most',
+        acceptable_percentage,
+        "%\n"
+      )
     }
     
     # Validate comparison operator
@@ -70,18 +83,24 @@ print_grouped_missing_percentages <-
       grouped_counts_percentage <- percent_by_group(df, col)
       
       # Filter based on comparison operator
-      if(comparison_operator == 'gt'){
-        na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] 
-                                                   & grouped_counts_percentage[['pct']] > acceptable_percentage), 'pct']
+      if (comparison_operator == 'gt') {
+        na_data <- grouped_counts_percentage[is.na(
+          grouped_counts_percentage[[col]]
+          &
+            grouped_counts_percentage[['pct']] > acceptable_percentage
+        ), 'pct']
       }
       else{
-        na_data <- grouped_counts_percentage[is.na(grouped_counts_percentage[[col]] 
-                                                   & grouped_counts_percentage[['pct']] <= acceptable_percentage), 'pct']
+        na_data <- grouped_counts_percentage[is.na(
+          grouped_counts_percentage[[col]]
+          &
+            grouped_counts_percentage[['pct']] <= acceptable_percentage
+        ), 'pct']
       }
       
       if (nrow(na_data) > 0) {
         my_list <- c(my_list, col)
-        if(return_list){
+        if (return_list) {
           next
         }
         percent <- na_data[['pct']]
@@ -93,22 +112,41 @@ print_grouped_missing_percentages <-
         formatted_value <- paste(rounded_value, "%", sep = "")
         
         # Print results for problematic groups
-        cat( line_number, "-", col, ":", formatted_value,"\n")
-        cat("Mode:", c_Mode(data[[col]]), "Median:", c_Median(data[[col]]), "Mean:", round(c_Mean(data[[col]]),1), "\n")
+        cat(line_number, "-", col, ":", formatted_value, "\n")
+        cat(
+          "Mode:",
+          c_Mode(data[[col]]),
+          "Median:",
+          c_Median(data[[col]]),
+          "Mean:",
+          round(c_Mean(data[[col]]), 1),
+          "\n"
+        )
         line_number <- line_number + 1
       }
     }
-    if(return_list){
+    if (return_list) {
       return(my_list)
     }
   }
 
 #Drop column with 100% missing data
-drop_column_from_dataset <- function(df, column_name = NULL){
-  if(!is.null(column_name)){
+drop_column_from_dataset <- function(df, column_name = NULL) {
+  if (!is.null(column_name)) {
     df <- df %>% select(-column_name)
   }
   return(df)
+}
+
+print_results <- function(preds, obs) {
+  mae <- mean(abs(preds - obs))
+  cat("Mean Absolute Error:", mae, '\n')
+  medae <- median(abs(preds - obs))
+  cat("Median Absolute Error:", medae, '\n')
+  rmse <- sqrt(mean((preds - obs) ^ 2))
+  cat("Root Mean Squared Error:", rmse, '\n')
+  mse <- mean((preds - obs) ^ 2)
+  cat("Mean Squared Error:", mse, '\n')
 }
 
 # List of columns to select
@@ -153,16 +191,16 @@ treshold <- 10
 
 high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
 
-for(item in high_missing_data){
+for (item in high_missing_data) {
   data <- drop_column_from_dataset(df = data, item)
-} 
+}
 
 print_grouped_missing_percentages(data, treshold, comparison_op, FALSE)
 
 comparison_op <- 'lte'
 high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
-for(item in high_missing_data){
-  cat(item,':', n_miss(data[[item]]),'\n') # number of missing value for a given variable
+for (item in high_missing_data) {
+  cat(item, ':', n_miss(data[[item]]), '\n') # number of missing value for a given variable
 }
 
 # Select rows with complete data (no missing values) in all columns
@@ -175,20 +213,23 @@ subset_ingocup <- filter(data_clean, ingocup > 16000)
 # Delete missing column
 subset_ingocup$ma48me1sm <- NULL
 
-scaled_data <- scale(subset_ingocup)
+# scaled_data <- scale(subset_ingocup)
 
-# Manual model
+# Manual model splitting
 training_prop <- 0.7  # Proportion for training data
-training_indices <- sample(1:nrow(scaled_data), size = nrow(scaled_data) * training_prop)
-training_data <- scaled_data[training_indices, ]
-testing_data <- scaled_data[-training_indices, ]
+training_indices <- sample(1:nrow(subset_ingocup), size = nrow(subset_ingocup) * training_prop)
+training_data <- subset_ingocup[training_indices, ]
+testing_data <- subset_ingocup[-training_indices, ]
 
-glimpse(training_data)
-glimpse(testing_data)
+basic_model <- randomForest(
+  formula = ingocup ~ .,
+  data = training_data,
+  ntree = 300,
+  importance = TRUE,
+  do.trace = TRUE
+)
 
-model <- randomForest(formula = ingocup ~ ., data = training_data, ntree = 300, importance = TRUE, do.trace = TRUE)
-
-?randomForest
+? randomForest
 
 plot(model)
 varImpPlot(model)
@@ -197,67 +238,82 @@ varImpPlot(model)
 # Grid search
 set.seed(1234)
 # Run the model
-trControl <- trainControl(method = "cv",
-                          number = 10,
-                          search = "grid",
-                          verboseIter = TRUE)
+trControl <- trainControl(
+  method = "cv",
+  number = 10,
+  search = "grid",
+  verboseIter = TRUE
+)
 
-rf_default <- train(ingocup~.,
-                    data = training_data,
-                    method = "rf",
-                    metric = "RMSE",
-                    trControl = trControl)
+rf_default <- train(
+  ingocup ~ .,
+  data = training_data,
+  method = "rf",
+  metric = "RMSE",
+  trControl = trControl
+)
 # Print the results
 print(rf_default)
+
+plot(rf_default)
 
 min_index_df <- which.min(rf_default$results$MAE)
 selected_row_df <- rf_default$results$MAE[min_index_df]
 
 # Default parameters
 print(rf_default$results$MAE)
-cat('DF MAE:',selected_row_df)
+cat('DF MAE:', selected_row_df)
 
 
 # Step 2
-tuneGrid <- expand.grid(.mtry = c(1: 10))
-rf_mtry <- train(ingocup~.,
-                 data = training_data,
-                 method = "rf",
-                 metric = "RMSE",
-                 tuneGrid = tuneGrid,
-                 trControl = trControl,
-                 importance = TRUE,
-                 nodesize = 14,
-                 ntree = 300)
+tuneGrid <- expand.grid(.mtry = c(1:10))
+rf_mtry <- train(
+  ingocup ~ .,
+  data = training_data,
+  method = "rf",
+  metric = "RMSE",
+  tuneGrid = tuneGrid,
+  trControl = trControl,
+  importance = TRUE,
+  nodesize = 14,
+  ntree = 300
+)
 
-cat(rf_mtry$bestTune$mtry, "MAE:", rf_mtry$results[rf_mtry$bestTune$mtry,'MAE'])
+# Print the results
+print(rf_mtry)
+
+plot(rf_mtry)
+
+cat(rf_mtry$bestTune$mtry, "MAE:", rf_mtry$results[rf_mtry$bestTune$mtry, 'MAE'])
 
 # Best mtry: Number of variable is randomly collected to be sampled at each split time.
 min_index_mtry <- which.min(rf_mtry$results$MAE)
 selected_row_mtry <- rf_mtry$results$MAE[min_index_df]
 
 print(rf_mtry$results$MAE)
-cat('MTRY MAE:',selected_row_mtry)
+cat('MTRY MAE:', selected_row_mtry)
 
-best_mtry <- rf_mtry$bestTune$mtry 
+best_mtry <- rf_mtry$bestTune$mtry
 
 # Step 3
 store_maxnode <- list()
 tuneGrid <- expand.grid(.mtry = best_mtry)
 
-for (maxnodes in c(25: 50)) {
+for (maxnodes in c(25:50)) {
   print(paste("Current max node:", maxnodes))
   set.seed(1234)
-  rf_maxnode <- train(ingocup~.,
-                      data = training_data,
-                      method = "rf",
-                      metric = "RMSE",
-                      tuneGrid = tuneGrid,
-                      trControl = trControl,
-                      importance = TRUE,
-                      nodesize = 14,
-                      maxnodes = maxnodes,
-                      ntree = 300)
+  rf_maxnode <- train(
+    ingocup ~ .,
+    data = training_data,
+    method = "rf",
+    metric = "RMSE",
+    tuneGrid = tuneGrid,
+    trControl = trControl,
+    importance = TRUE,
+    nodesize = 14,
+    maxnodes = maxnodes,
+    ntree = 300
+  )
   current_iteration <- toString(maxnodes)
   store_maxnode[[current_iteration]] <- rf_maxnode
 }
@@ -265,12 +321,14 @@ for (maxnodes in c(25: 50)) {
 results_max_node <- resamples(store_maxnode)
 summary_max_node <- summary(results_max_node)
 
-print(selected_row_summary_max_node)
-
-min_index_summary_max_node <- which.min(summary_max_node$statistics$MAE[,'Min.'])  # Replace "column_name" with your actual column
+min_index_summary_max_node <- which.min(summary_max_node$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
 selected_row_summary_max_node <- summary_max_node$statistics$MAE[min_index_summary_max_node, ]
 # Best maxnodes: Controls the maximum number of terminal nodes (also called leaves) that can be created in each tree within the forest.
-cat(names(min_index_summary_max_node), "MAE:", round(selected_row_summary_max_node[1],7))
+cat(
+  names(min_index_summary_max_node),
+  "MAE:",
+  round(selected_row_summary_max_node[1], 7)
+)
 
 best_max_nodes <- as.integer(names(min_index_summary_max_node))
 
@@ -279,16 +337,18 @@ store_maxtrees <- list()
 for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
   print(paste("Current ntree:", ntree))
   set.seed(5678)
-  rf_maxtrees <- train(ingocup~.,
-                       data = training_data,
-                       method = "rf",
-                       metric = "RMSE",
-                       tuneGrid = tuneGrid,
-                       trControl = trControl,
-                       importance = TRUE,
-                       nodesize = 14,
-                       maxnodes = best_max_nodes,
-                       ntree = ntree)
+  rf_maxtrees <- train(
+    ingocup ~ .,
+    data = training_data,
+    method = "rf",
+    metric = "RMSE",
+    tuneGrid = tuneGrid,
+    trControl = trControl,
+    importance = TRUE,
+    nodesize = 14,
+    maxnodes = best_max_nodes,
+    ntree = ntree
+  )
   key <- toString(ntree)
   store_maxtrees[[key]] <- rf_maxtrees
 }
@@ -296,13 +356,13 @@ for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
 results_ntrees <- resamples(store_maxtrees)
 summary_ntrees <- summary(results_ntrees)
 
-print(summary_ntrees)
-
-min_index_summary_ntrees <- which.min(summary_ntrees$statistics$MAE[,'Min.'])  # Replace "column_name" with your actual column
-selected_row_summary_ntrees <- summary_ntrees$statistics$MAE[names(min_index_summary_ntrees),]
+min_index_summary_ntrees <- which.min(summary_ntrees$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
+selected_row_summary_ntrees <- summary_ntrees$statistics$MAE[names(min_index_summary_ntrees), ]
 
 # Best ntree: ntree refers to the number of trees that are grown in the entire forest.
-cat(names(min_index_summary_ntrees), "MAE:", round(selected_row_summary_ntrees[1],7))
+cat(names(min_index_summary_ntrees),
+    "MAE:",
+    round(selected_row_summary_ntrees[1], 7))
 
 best_ntree <- as.integer(names(min_index_summary_ntrees))
 
@@ -316,75 +376,50 @@ print(rf_mtry$results$MAE) # Step 2
 print(summary_max_node$statistics$MAE) # Step 3
 print(summary_ntrees$statistics$MAE) # Step 4
 
-cat('DF MAE:',selected_row_df)
-cat('MTRY MAE:',selected_row_mtry)
-cat("MAXNODES MAE:", round(selected_row_summary_max_node[1],7))
-cat("NTREE MAE:", round(selected_row_summary_ntrees[1],7))
+cat('DF MAE:', selected_row_df)
+cat('MTRY MAE:', selected_row_mtry)
+cat("MAXNODES MAE:", round(selected_row_summary_max_node[1], 7))
+cat("NTREE MAE:", round(selected_row_summary_ntrees[1], 7))
 
-#Final model with the best parameters
-fit_rf <- train(ingocup~.,
-                training_data,
-                method = "rf",
-                metric = "RMSE",
-                tuneGrid = tuneGrid,
-                trControl = trControl,
-                importance = TRUE,
-                nodesize = 14,
-                ntree = best_ntree,
-                maxnodes = best_max_nodes)
+#Final model with the best parameters using caret and grid search
+fit_rf <- train(
+  ingocup ~ .,
+  training_data,
+  method = "rf",
+  metric = "RMSE",
+  tuneGrid = tuneGrid,
+  trControl = trControl,
+  importance = TRUE,
+  nodesize = 14,
+  ntree = best_ntree,
+  maxnodes = best_max_nodes
+)
 
-prediction <-predict(model, testing_data[,'ingocup'])
+prediction <- predict(fit_rf, testing_data$ingocup)
 
 print(typeof(testing_data))
 
-# Since we're working with a continuous variable confusion matrix is not appropriate way to evaluate the model performance
-confusionMatrix(prediction, testing_data[,'ingocup'])
+# Final Model
+model <- randomForest(
+  formula = ingocup ~ .,
+  data = training_data,
+  ntree = best_ntree,
+  maxnodes = best_max_nodes,
+  mtry = best_mtry,
+  nodesize = 14,
+  importance = TRUE,
+  do.trace = 50
+)
 
-?randomForest
-
-
-model <- randomForest(formula = ingocup ~ .,
-                      data = training_data,
-                      ntree = best_ntree,
-                      maxnodes = best_max_nodes,
-                      mtry = best_mtry,
-                      nodesize = 14,
-                      importance = TRUE, do.trace = 50)
-
+plot(basic_model)
+plot(model)
+varImpPlot(basic_model)
 varImpPlot(model)
 
-typeof(fit_rf)
+basic_preds <- predict(basic_model, testing_data)
+ct_preds <- predict(fit_rf, testing_data)
+preds <- predict(model, testing_data)
 
-importance <- varImp.train(fit_rf)
-
-importance <- varImp.train(fit_rf)
-
-plot(model)
-
-mae <- mean(abs(prediction - testing_data[,'ingocup']))
-cat("Mean Absolute Error:", mae)
-
-library(caret)
-
-mae <- mae(prediction, testing_data[,'ingocup'])
-cat("Mean Absolute Error (using metrics package):", mae)
-
-rmse <- sqrt(mean((prediction - testing_data[,'ingocup'])^2))
-cat("Root Mean Squared Error:", rmse)
-
-mse <- mean((prediction - testing_data[,'ingocup'])^2)
-cat("Mean Squared Error:", mse)
-
-library(caret)
-
-# Assuming you have predicted values in 'predicted_values'
-# and actual values in 'testing_data$target'
-
-r_squared <- Rsq(prediction, testing_data[,'ingocup'])
-cat("R-squared (using caret):", r_squared)
-
-
-ggplot(testing_data, aes(x = 'ingocup')) + 
-  geom_histogram(binwidth = .05) + 
-  facet_wrap(prediction) + 
-  xlab("Probability of Class #1")
+print_results(basic_preds, testing_data$ingocup)
+print_results(ct_preds, testing_data$ingocup)
+print_results(preds, testing_data$ingocup)

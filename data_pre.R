@@ -172,6 +172,8 @@ data_clean <- data[complete_rows, ]  # Select rows based on logical vector
 # subset_ingocup <- filter(data_clean, ingocup > 2000 & ingocup <= 14000)
 subset_ingocup <- filter(data_clean, ingocup > 16000)
 
+summary(subset_ingocup)
+
 # Delete missing column
 subset_ingocup$ma48me1sm <- NULL
 
@@ -182,6 +184,10 @@ training_prop <- 0.7  # Proportion for training data
 training_indices <- sample(1:nrow(scaled_data), size = nrow(scaled_data) * training_prop)
 training_data <- scaled_data[training_indices, ]
 testing_data <- scaled_data[-training_indices, ]
+
+glimpse(training_data)
+glimpse(testing_data)
+
 
 glimpse(training_data)
 glimpse(testing_data)
