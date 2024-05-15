@@ -5,9 +5,9 @@ print(res)
 
 matrixplot(data_clean, sortby = 2)
 
-pct_miss(scaled_data) # percentage of missing value in the data.
+pct_miss(data) # percentage of missing value in the data.
 
-n_miss(scaled_data) # number of missing values in the 
+n_miss(data) # number of missing values in the 
 
 n_complete(scaled_data) # without missing value
 

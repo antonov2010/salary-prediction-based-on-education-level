@@ -10,6 +10,7 @@ library(randomForest)
 library(caret)  # Load caret package after installation
 library(e1071)
 library(MASS)  # Load MASS package for MedAE function
+library(plotly)
 
 # read csv file and load to a table data
 file_path <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"
@@ -321,6 +322,10 @@ for (maxnodes in c(25:50)) {
 results_max_node <- resamples(store_maxnode)
 summary_max_node <- summary(results_max_node)
 
+results_max_node
+
+summary_max_node
+
 min_index_summary_max_node <- which.min(summary_max_node$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
 selected_row_summary_max_node <- summary_max_node$statistics$MAE[min_index_summary_max_node, ]
 # Best maxnodes: Controls the maximum number of terminal nodes (also called leaves) that can be created in each tree within the forest.
@@ -355,6 +360,8 @@ for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
 
 results_ntrees <- resamples(store_maxtrees)
 summary_ntrees <- summary(results_ntrees)
+
+summary_ntrees
 
 min_index_summary_ntrees <- which.min(summary_ntrees$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
 selected_row_summary_ntrees <- summary_ntrees$statistics$MAE[names(min_index_summary_ntrees), ]
@@ -423,3 +430,41 @@ preds <- predict(model, testing_data)
 print_results(basic_preds, testing_data$ingocup)
 print_results(ct_preds, testing_data$ingocup)
 print_results(preds, testing_data$ingocup)
+
+plot(testing_data$ingocup, ct_preds)
+abline(a = 0, b = 1, col = "red")  # Diagonal reference line
+
+plot(ct_preds, testing_data$ingocup - preds, main = "Residuals vs. Predicted Values")
+abline(a = 0, h = 1, col = "red")  # Add a horizontal reference line at zero
+
+hist(testing_data$ingocup)
+hist(ct_preds)
+
+
+plot(x=preds, y= testing_data$ingocup,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values')
+abline(a=0, b=1)
+
+# create dataframe with actual and predicted values 
+plot_data <- data.frame(Predicted_value = ct_preds,   
+                        Observed_value = testing_data$ingocup)
+
+
+# plot predicted values and actual values 
+ggplot(plot_data, aes(x = Observed_value, y = Predicted_value)) + 
+  geom_point() + 
+  geom_abline(intercept = 0, slope = 1, color = "green")
+
+ggplot_object <- ggplot(plot_data, aes(Observed_value, Predicted_value)) +
+  geom_point(aes(color = "Observed"), size = 3) +
+  geom_line(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_value, color = "Predicted", alpha = .1), size = 5) +
+  geom_line(aes(y = Predicted_value, color = "Predicted")) +
+  scale_color_manual(values = c("orange", "deepskyblue3")) +
+  theme_bw()
+
+ggplot_object
+
+ggplotly(ggplot_object)
