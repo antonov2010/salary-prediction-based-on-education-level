@@ -2,15 +2,14 @@
 library(data.table) #required to read csv files
 library(dplyr) #required to manipulate dataframes
 library(ggplot2) #required to plot graphs
-library(VIM)
-library(base)
-library(naniar)
-library(corrplot)
-library(randomForest)
+library(VIM) # Visualization and Imputation of Missing Values
+library(base) # This package contains the basic functions which let R function as a language
+library(naniar) # naniar is a package to make it easier to summarise and handle missing values in R
+library(corrplot) # A graphical display of a correlation matrix, confidence interval. 
+library(randomForest) # randomForest implements Breiman's random forest algorithm for classification and regression.
 library(caret)  # Load caret package after installation
-library(e1071)
 library(MASS)  # Load MASS package for MedAE function
-library(plotly)
+library(plotly) # An R package for creating interactive web-based graphs via the open source JavaScript graphing library plotly.js.
 
 # read csv file and load to a table data
 file_path <- "./enoe_n_2022_trim4_csv (2)/ENOEN_SDEMT422.csv"
@@ -40,7 +39,8 @@ percent_by_group <- function(df, col, total_count = nrow(df)) {
               )
 }
 
-
+# Identify and report columns in a data frame that have a high percentage of missing values (above acceptable percentage or threshold).
+# Identify and report columns in a data frame that are within an acceptable percentage or threshold.
 print_grouped_missing_percentages <-
   function(df,
            acceptable_percentage,
@@ -131,7 +131,7 @@ print_grouped_missing_percentages <-
     }
   }
 
-#Drop column with 100% missing data
+# Drop column with 100% missing data
 drop_column_from_dataset <- function(df, column_name = NULL) {
   if (!is.null(column_name)) {
     df <- df %>% select(-column_name)
@@ -139,6 +139,7 @@ drop_column_from_dataset <- function(df, column_name = NULL) {
   return(df)
 }
 
+# Print regression model metrics for performance evaluation
 print_results <- function(preds, obs) {
   mae <- mean(abs(preds - obs))
   cat("Mean Absolute Error:", mae, '\n')
@@ -150,7 +151,7 @@ print_results <- function(preds, obs) {
   cat("Mean Squared Error:", mse, '\n')
 }
 
-# List of columns to select
+# List of columns to select from original data frame
 col_list <- c(
   'mun',
   'cd_a',
@@ -190,38 +191,53 @@ data <- select(data, col_list)
 comparison_op <- 'gt'
 treshold <- 10
 
+# Get columns with high percentage of missing values
 high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
 
+# Remove columns with high percentage of missing values
 for (item in high_missing_data) {
   data <- drop_column_from_dataset(df = data, item)
 }
 
+# Report and print if any column has a high percentage of missing values
 print_grouped_missing_percentages(data, treshold, comparison_op, FALSE)
 
 comparison_op <- 'lte'
+
+# Get columns with an acceptable percentage of missing data
 high_missing_data <- print_grouped_missing_percentages(data, treshold, comparison_op, TRUE)
+
+# Print size of missing data for each reported column to identify correlated patters in missing data
 for (item in high_missing_data) {
   cat(item, ':', n_miss(data[[item]]), '\n') # number of missing value for a given variable
 }
+
+#Imputation
+#Based on data analisys we proceed to remove missing observations since they represent a lower percentage of the whole data
 
 # Select rows with complete data (no missing values) in all columns
 complete_rows <- complete.cases(data)  # Check for complete cases in all columns
 data_clean <- data[complete_rows, ]  # Select rows based on logical vector
 
-# subset_ingocup <- filter(data_clean, ingocup > 2000 & ingocup <= 14000)
+# Select observations where income is greater 16k since based on our data analisys
+# we have determined this sub set or group could be a potential sample to train our model
 subset_ingocup <- filter(data_clean, ingocup > 16000)
 
-# Delete missing column
+# Delete missing column for this group or sub set of data
 subset_ingocup$ma48me1sm <- NULL
 
 # scaled_data <- scale(subset_ingocup)
 
 # Manual model splitting
 training_prop <- 0.7  # Proportion for training data
+# Select training indices from our sub set
 training_indices <- sample(1:nrow(subset_ingocup), size = nrow(subset_ingocup) * training_prop)
+# Based on previous selected indices select the training data
 training_data <- subset_ingocup[training_indices, ]
+#  This line leverages negation (-) for efficient test data selection.
 testing_data <- subset_ingocup[-training_indices, ]
 
+# Train a random forest model on the training data (no parameter tuning)
 basic_model <- randomForest(
   formula = ingocup ~ .,
   data = training_data,
@@ -229,8 +245,6 @@ basic_model <- randomForest(
   importance = TRUE,
   do.trace = TRUE
 )
-
-? randomForest
 
 plot(model)
 varImpPlot(model)
