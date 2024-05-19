@@ -246,8 +246,15 @@ basic_model <- randomForest(
   do.trace = TRUE
 )
 
-plot(model)
-varImpPlot(model)
+# Plotting the Error vs Number of Trees Graph.
+plot(basic_model)
+
+# Visualize the variable importance in random forest model.
+varImpPlot(basic_model)
+
+importance(basic_model)
+
+# Hyperparameter tuning
 
 # Step 1
 # Grid search
