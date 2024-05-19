@@ -259,7 +259,7 @@ importance(basic_model)
 # Step 1
 # Grid search
 set.seed(1234)
-# Run the model
+# Allows to define a set of parameters that govern how the training process is executed and evaluated.
 trControl <- trainControl(
   method = "cv",
   number = 10,
@@ -267,6 +267,7 @@ trControl <- trainControl(
   verboseIter = TRUE
 )
 
+#  Train and tune random forest model with default parameters and hyperparameters
 rf_default <- train(
   ingocup ~ .,
   data = training_data,
@@ -274,12 +275,20 @@ rf_default <- train(
   metric = "RMSE",
   trControl = trControl
 )
+
 # Print the results
 print(rf_default)
 
 plot(rf_default)
 
+# Visualize the variable importance in random forest model.
+varImpPlot(basic_model)
+
+importance(basic_model)
+
+# Get the min error index
 min_index_df <- which.min(rf_default$results$MAE)
+# Select the error based on the previous selected index
 selected_row_df <- rf_default$results$MAE[min_index_df]
 
 # Default parameters
@@ -288,7 +297,10 @@ cat('DF MAE:', selected_row_df)
 
 
 # Step 2
+# Define a grid of hyperparameter values for model training and tuning
 tuneGrid <- expand.grid(.mtry = c(1:10))
+
+#  Train and tune random forest model with grid of possible values for mtry
 rf_mtry <- train(
   ingocup ~ .,
   data = training_data,
@@ -309,89 +321,102 @@ plot(rf_mtry)
 cat(rf_mtry$bestTune$mtry, "MAE:", rf_mtry$results[rf_mtry$bestTune$mtry, 'MAE'])
 
 # Best mtry: Number of variable is randomly collected to be sampled at each split time.
+
+# Get the min error index
 min_index_mtry <- which.min(rf_mtry$results$MAE)
+# Select the error based on the previous selected index
 selected_row_mtry <- rf_mtry$results$MAE[min_index_df]
 
 print(rf_mtry$results$MAE)
 cat('MTRY MAE:', selected_row_mtry)
 
+# Save the best mtry value we got after going trough a list of possible values (1:10)
 best_mtry <- rf_mtry$bestTune$mtry
 
 # Step 3
+# List to hold the models for each different selected maxnode value (25 to 50)
 store_maxnode <- list()
+# Set the best mtry by default (previously optimized)
 tuneGrid <- expand.grid(.mtry = best_mtry)
-
 for (maxnodes in c(25:50)) {
   print(paste("Current max node:", maxnodes))
-  set.seed(1234)
+  set.seed(1234)  # Set random seed for reproducibility (optional)
+  # Train random forest model with current maxnodes
   rf_maxnode <- train(
-    ingocup ~ .,
+    ingocup ~ .,  # Formula: target variable ~ all predictors
     data = training_data,
-    method = "rf",
-    metric = "RMSE",
-    tuneGrid = tuneGrid,
-    trControl = trControl,
-    importance = TRUE,
-    nodesize = 14,
-    maxnodes = maxnodes,
-    ntree = 300
+    method = "rf",  # Random forest algorithm
+    metric = "RMSE",  # Evaluation metric (Root Mean Squared Error)
+    tuneGrid = tuneGrid,  # Predefined grid search configuration
+    trControl = trControl,  # Training control object for cross-validation
+    importance = TRUE,  # Calculate variable importance
+    nodesize = 14,  # Minimum size of terminal nodes (optional)
+    maxnodes = maxnodes,  # Current maxnodes value being tested
+    ntree = 300  # Number of trees in the forest (previously chosen)
   )
+  # Store the trained model with current maxnodes
   current_iteration <- toString(maxnodes)
   store_maxnode[[current_iteration]] <- rf_maxnode
 }
 
+# Evaluate Model Performance Across Different Maxnodes
 results_max_node <- resamples(store_maxnode)
 summary_max_node <- summary(results_max_node)
 
-results_max_node
-
-summary_max_node
-
+# Identify Model with Minimum Mean Absolute Error (MAE)
 min_index_summary_max_node <- which.min(summary_max_node$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
 selected_row_summary_max_node <- summary_max_node$statistics$MAE[min_index_summary_max_node, ]
 # Best maxnodes: Controls the maximum number of terminal nodes (also called leaves) that can be created in each tree within the forest.
+# Print Best Maxnodes and Corresponding Minimum MAE
 cat(
   names(min_index_summary_max_node),
   "MAE:",
   round(selected_row_summary_max_node[1], 7)
 )
 
+# Extract Best Maxnodes Value as Integer
 best_max_nodes <- as.integer(names(min_index_summary_max_node))
 
-# Step 4
+
+# Step 4: Grid Search for Number of Trees (ntree)
+# List to store models trained with different ntree values
 store_maxtrees <- list()
 for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
   print(paste("Current ntree:", ntree))
-  set.seed(5678)
+  # Train Random Forest Model with Current ntree
+  set.seed(1234)
   rf_maxtrees <- train(
-    ingocup ~ .,
+    ingocup ~ .,  # Formula: target variable ~ all predictors
     data = training_data,
-    method = "rf",
-    metric = "RMSE",
-    tuneGrid = tuneGrid,
-    trControl = trControl,
-    importance = TRUE,
-    nodesize = 14,
-    maxnodes = best_max_nodes,
-    ntree = ntree
+    method = "rf",  # Random forest algorithm
+    metric = "RMSE",  # Evaluation metric (Root Mean Squared Error)
+    tuneGrid = tuneGrid,  # Predefined grid search configuration (assuming mtry is set)
+    trControl = trControl,  # Training control object for cross-validation
+    importance = TRUE,  # Calculate variable importance
+    nodesize = 14,  # Minimum size of terminal nodes (optional)
+    maxnodes = best_max_nodes,  # Use previously identified best maxnodes
+    ntree = ntree  # Current ntree value being tested
   )
+  # Store the Trained Model with Current ntree
   key <- toString(ntree)
   store_maxtrees[[key]] <- rf_maxtrees
 }
 
-results_ntrees <- resamples(store_maxtrees)
-summary_ntrees <- summary(results_ntrees)
+# Evaluate Model Performance Across Different ntree Values
+results_ntrees <- resamples(store_maxtrees)  # Perform resampling (cross-validation)
+summary_ntrees <- summary(results_ntrees)  # Summarize resampling results
 
-summary_ntrees
-
+# Identify Model with Minimum Mean Absolute Error (MAE)
 min_index_summary_ntrees <- which.min(summary_ntrees$statistics$MAE[, 'Min.'])  # Replace "column_name" with your actual column
 selected_row_summary_ntrees <- summary_ntrees$statistics$MAE[names(min_index_summary_ntrees), ]
 
 # Best ntree: ntree refers to the number of trees that are grown in the entire forest.
+# Print Best ntree and Corresponding Minimum MAE
 cat(names(min_index_summary_ntrees),
     "MAE:",
     round(selected_row_summary_ntrees[1], 7))
 
+# Extract Best ntree Value as Integer
 best_ntree <- as.integer(names(min_index_summary_ntrees))
 
 print(rf_default$results)
@@ -409,7 +434,7 @@ cat('MTRY MAE:', selected_row_mtry)
 cat("MAXNODES MAE:", round(selected_row_summary_max_node[1], 7))
 cat("NTREE MAE:", round(selected_row_summary_ntrees[1], 7))
 
-#Final model with the best parameters using caret and grid search
+# Final Model Training with Best Hyperparameters using caret train function
 fit_rf <- train(
   ingocup ~ .,
   training_data,
@@ -423,20 +448,16 @@ fit_rf <- train(
   maxnodes = best_max_nodes
 )
 
-prediction <- predict(fit_rf, testing_data$ingocup)
-
-print(typeof(testing_data))
-
-# Final Model
+# Final Model Training with randomForest function
 model <- randomForest(
-  formula = ingocup ~ .,
-  data = training_data,
-  ntree = best_ntree,
-  maxnodes = best_max_nodes,
-  mtry = best_mtry,
-  nodesize = 14,
-  importance = TRUE,
-  do.trace = 50
+  formula = ingocup ~ .,  # Formula: target variable ~ all predictors
+  data = training_data,  # Training data subset
+  ntree = best_ntree,     # Number of trees (using best value)
+  maxnodes = best_max_nodes,  # Maximum terminal nodes (using best value)
+  mtry = best_mtry,        # Number of variables tried at each node (using best value)
+  nodesize = 14,          # Minimum size of terminal nodes (optional)
+  importance = TRUE,      # Calculate variable importance
+  do.trace = 50           # Print information every 50 trees (optional)
 )
 
 plot(basic_model)
@@ -444,14 +465,17 @@ plot(model)
 varImpPlot(basic_model)
 varImpPlot(model)
 
+# Make predictions using different trained models
 basic_preds <- predict(basic_model, testing_data)
 ct_preds <- predict(fit_rf, testing_data)
 preds <- predict(model, testing_data)
 
+# Print prediction results
 print_results(basic_preds, testing_data$ingocup)
 print_results(ct_preds, testing_data$ingocup)
 print_results(preds, testing_data$ingocup)
 
+# Plot results for predictions of the model created with caret::train() method
 plot(testing_data$ingocup, ct_preds)
 abline(a = 0, b = 1, col = "red")  # Diagonal reference line
 
@@ -478,6 +502,7 @@ ggplot(plot_data, aes(x = Observed_value, y = Predicted_value)) +
   geom_point() + 
   geom_abline(intercept = 0, slope = 1, color = "green")
 
+# Creates an interactive graph using plotly package
 ggplot_object <- ggplot(plot_data, aes(Observed_value, Predicted_value)) +
   geom_point(aes(color = "Observed"), size = 3) +
   geom_line(aes(color = "Observed")) +
@@ -486,6 +511,9 @@ ggplot_object <- ggplot(plot_data, aes(Observed_value, Predicted_value)) +
   scale_color_manual(values = c("orange", "deepskyblue3")) +
   theme_bw()
 
+# Display plot
 ggplot_object
 
+
+# Display dynamic plotly graph
 ggplotly(ggplot_object)
